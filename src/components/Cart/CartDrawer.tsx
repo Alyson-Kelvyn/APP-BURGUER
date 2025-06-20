@@ -61,7 +61,7 @@ export const CartDrawer = ({ children }: CartDrawerProps) => {
                 </div>
               ) : (
                 <>
-                  <div className="flex-1 overflow-y-auto space-y-2 pr-0.5 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent">
+                  <div className="flex-1 overflow-y-auto space-y-2 pr-0.5 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent sm:overflow-x-visible overflow-x-auto">
                     {items.map((item) => (
                       <Card key={item.id} className="border-gray-200">
                         <CardContent className="p-2 sm:p-3">
