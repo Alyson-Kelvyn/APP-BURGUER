@@ -42,7 +42,7 @@ export const CategoryNav = ({
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-6">
           <h3 className="text-2xl font-bold text-gray-900 mb-2">
-            Escolha sua Categoria
+            Categorias
           </h3>
         </div>
 
