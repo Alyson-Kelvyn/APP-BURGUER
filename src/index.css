@@ -101,3 +101,22 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Scrollbar transparente para a barra de categorias */
+.category-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+}
+
+.category-scrollbar::-webkit-scrollbar {
+  height: 8px;
+  background: transparent;
+}
+
+.category-scrollbar::-webkit-scrollbar-thumb {
+  background: transparent;
+}
+
+.category-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}

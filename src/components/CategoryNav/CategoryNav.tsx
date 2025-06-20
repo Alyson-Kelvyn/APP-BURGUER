@@ -46,7 +46,7 @@ export const CategoryNav = ({
           </h3>
         </div>
 
-        <div className="flex flex-nowrap overflow-x-auto gap-4 px-1 sm:justify-center sm:flex-wrap sm:overflow-visible">
+        <div className="flex flex-nowrap overflow-x-auto gap-4 px-1 sm:justify-center sm:flex-wrap sm:overflow-visible category-scrollbar">
           {categories.map((category) => (
             <Button
               key={category}
