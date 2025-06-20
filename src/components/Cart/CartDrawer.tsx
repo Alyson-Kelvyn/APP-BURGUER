@@ -38,7 +38,7 @@ export const CartDrawer = ({ children }: CartDrawerProps) => {
   return (
     <Sheet>
       <SheetTrigger asChild>{children}</SheetTrigger>
-      <SheetContent className="w-full max-w-xs sm:w-[330px] sm:max-w-full p-1.5 sm:p-4">
+      <SheetContent className="w-full max-w-[18rem] sm:w-[300px] sm:max-w-full p-1 sm:p-3 overflow-x-hidden">
         <SheetHeader>
           <SheetTitle className="flex items-center gap-2">
             <ShoppingCart className="h-5 w-5" />
@@ -46,7 +46,7 @@ export const CartDrawer = ({ children }: CartDrawerProps) => {
           </SheetTitle>
         </SheetHeader>
 
-        <div className="mt-4 flex flex-col h-full max-h-[calc(100vh-60px)] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent">
+        <div className="mt-2 flex flex-col h-full max-h-[calc(100vh-100px)] overflow-y-auto overflow-x-hidden scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent">
           {showCheckout ? (
             <CheckoutForm onBack={handleBackToCart} />
           ) : (
@@ -55,64 +55,65 @@ export const CartDrawer = ({ children }: CartDrawerProps) => {
                 <div className="flex-1 flex items-center justify-center">
                   <p className="text-gray-500 text-center">
                     Seu carrinho está vazio.
-                    <br />
-                    Adicione alguns produtos deliciosos!
                   </p>
                 </div>
               ) : (
                 <>
-                  <div className="flex-1 overflow-y-auto space-y-2 pr-0.5 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent sm:overflow-x-visible overflow-x-auto">
+                  <div className="flex-1 overflow-y-auto overflow-x-hidden space-y-1 pr-0.5 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent">
                     {items.map((item) => (
-                      <Card key={item.id} className="border-gray-200">
-                        <CardContent className="p-2 sm:p-3">
-                          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3">
+                      <Card
+                        key={item.id}
+                        className="border-gray-200 w-full max-w-full"
+                      >
+                        <CardContent className="p-1 sm:p-1 w-full max-w-full">
+                          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-1 sm:gap-2 w-full max-w-full">
                             <img
                               src={item.image}
                               alt={item.name}
-                              className="w-full max-w-[90px] sm:w-16 h-20 sm:h-16 object-cover rounded"
+                              className="w-full max-w-[50px] sm:w-10 h-14 sm:h-10 object-cover rounded"
                             />
-                            <div className="flex-1 w-full min-w-0">
-                              <h4 className="font-bold text-sm sm:text-lg break-words whitespace-normal leading-tight mb-1 truncate">
+                            <div className="flex-1 w-full min-w-0 max-w-full">
+                              <h4 className="font-bold text-xs sm:text-base break-words whitespace-normal leading-tight mb-0.5 truncate">
                                 {item.name}
                               </h4>
-                              <p className="text-xs sm:text-sm text-gray-600 mb-1 sm:mb-2 line-clamp-2 break-words whitespace-normal truncate">
+                              <p className="text-[10px] sm:text-xs text-gray-600 mb-1 sm:mb-1.5 line-clamp-2 break-words whitespace-normal truncate">
                                 {item.description}
                               </p>
-                              <div className="flex flex-row items-center justify-between gap-1 sm:gap-2 mt-1">
-                                <span className="font-bold text-orange-600 text-sm sm:text-lg">
+                              <div className="flex flex-row items-center justify-between gap-1 sm:gap-1.5 mt-0.5">
+                                <span className="font-bold text-orange-600 text-xs sm:text-base">
                                   R$ {item.price.toFixed(2)}
                                 </span>
-                                <div className="flex items-center gap-1 sm:gap-2">
+                                <div className="flex items-center gap-0.5 sm:gap-1">
                                   <Button
                                     size="icon"
                                     variant="outline"
-                                    className="h-7 w-7 sm:h-8 sm:w-8 text-sm sm:text-base"
+                                    className="h-6 w-6 sm:h-7 sm:w-7 text-xs sm:text-sm"
                                     onClick={() =>
                                       updateQuantity(item.id, item.quantity - 1)
                                     }
                                   >
-                                    <Minus className="h-4 w-4" />
+                                    <Minus className="h-3 w-3" />
                                   </Button>
-                                  <span className="w-7 sm:w-8 text-center text-sm sm:text-base">
+                                  <span className="w-6 sm:w-7 text-center text-xs sm:text-sm">
                                     {item.quantity}
                                   </span>
                                   <Button
                                     size="icon"
                                     variant="outline"
-                                    className="h-7 w-7 sm:h-8 sm:w-8 text-sm sm:text-base"
+                                    className="h-6 w-6 sm:h-7 sm:w-7 text-xs sm:text-sm"
                                     onClick={() =>
                                       updateQuantity(item.id, item.quantity + 1)
                                     }
                                   >
-                                    <Plus className="h-4 w-4" />
+                                    <Plus className="h-3 w-3" />
                                   </Button>
                                   <Button
                                     size="icon"
                                     variant="outline"
-                                    className="h-7 w-7 sm:h-8 sm:w-8 text-sm sm:text-base text-red-600 hover:text-red-700 ml-1"
+                                    className="h-6 w-6 sm:h-7 sm:w-7 text-xs sm:text-sm text-red-600 hover:text-red-700 ml-1"
                                     onClick={() => removeFromCart(item.id)}
                                   >
-                                    <Trash2 className="h-4 w-4" />
+                                    <Trash2 className="h-3 w-3" />
                                   </Button>
                                 </div>
                               </div>
@@ -123,17 +124,17 @@ export const CartDrawer = ({ children }: CartDrawerProps) => {
                     ))}
                   </div>
 
-                  <div className="border-t pt-4 space-y-3 mt-4">
-                    <div className="flex justify-between text-base sm:text-xl font-bold">
+                  <div className="border-t pt-2 space-y-2 mt-2">
+                    <div className="flex justify-between text-sm sm:text-lg font-bold">
                       <span>Total:</span>
                       <span className="text-orange-600">
                         R$ {getTotalPrice().toFixed(2)}
                       </span>
                     </div>
 
-                    <div className="space-y-2 sm:space-y-3">
+                    <div className="space-y-1 sm:space-y-2">
                       <Button
-                        className="w-full bg-orange-600 hover:bg-orange-700 py-2 sm:py-3 text-sm sm:text-base font-semibold"
+                        className="w-full bg-orange-600 hover:bg-orange-700 py-1.5 sm:py-2.5 text-xs sm:text-base font-semibold"
                         size="lg"
                         onClick={handleCheckout}
                       >
@@ -141,7 +142,7 @@ export const CartDrawer = ({ children }: CartDrawerProps) => {
                       </Button>
                       <Button
                         variant="outline"
-                        className="w-full py-2 text-sm sm:text-base"
+                        className="w-full py-1 text-xs sm:text-base"
                         onClick={clearCart}
                         size="sm"
                       >

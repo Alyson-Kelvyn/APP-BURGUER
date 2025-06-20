@@ -109,8 +109,7 @@ const Index = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-6">
             <div className="flex items-center">
-              <h1 className="text-3xl font-bold text-orange-600">Burger House</h1>
-              <p className="ml-4 text-gray-600 hidden sm:block">Os Melhores Sabores da Cidade</p>
+              <h1 className="text-3xl font-bold text-orange-600">Nildo Burguer</h1>
             </div>
             <div className="flex items-center gap-4">
               <Button

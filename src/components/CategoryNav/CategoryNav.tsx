@@ -38,15 +38,12 @@ export const CategoryNav = ({
   onCategorySelect,
 }: CategoryNavProps) => {
   return (
-    <section className="py-8 bg-orange-100">
+    <section className="py-2 bg-orange-100">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-6">
           <h3 className="text-2xl font-bold text-gray-900 mb-2">
             Escolha sua Categoria
           </h3>
-          <p className="text-gray-600">
-            Navegue pelos nossos deliciosos produtos
-          </p>
         </div>
 
         <div className="flex flex-nowrap overflow-x-auto gap-4 px-1 sm:justify-center sm:flex-wrap sm:overflow-visible">
