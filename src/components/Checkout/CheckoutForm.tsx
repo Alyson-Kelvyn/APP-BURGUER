@@ -11,10 +11,16 @@ import {
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { useCart } from "@/contexts/CartContext";
+import { createClient } from "@supabase/supabase-js";
 
 interface CheckoutFormProps {
   onBack: () => void;
 }
+
+const supabaseRaw = createClient(
+  "https://tkwttdjpkynqprszlmmr.supabase.co",
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRrd3R0ZGpwa3lucXByc3psbW1yIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTAyNjU1NjEsImV4cCI6MjA2NTg0MTU2MX0._nj90k5DdOSrscu1iwdr1Fmp34gjCRuLa0hSK-ktGSk"
+);
 
 export function CheckoutForm({ onBack }: CheckoutFormProps) {
   const [name, setName] = useState("");
@@ -51,11 +57,38 @@ export function CheckoutForm({ onBack }: CheckoutFormProps) {
     return encodeURIComponent(message);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
     try {
+      // Inserir pedido no Supabase
+      const { error: insertError } = await supabaseRaw.from("orders").insert([
+        {
+          customer_name: name,
+          customer_phone: phone,
+          address_street: street,
+          address_number: number,
+          address_neighborhood: neighborhood,
+          order_items: items.map((item) => ({
+            name: item.name,
+            quantity: item.quantity,
+            price: item.price,
+          })),
+          total_value: getTotalPrice(),
+          payment_method: paymentMethod,
+        },
+      ]);
+      if (insertError) {
+        toast({
+          title: "Erro ao salvar pedido",
+          description: insertError.message,
+          variant: "destructive",
+        });
+        setLoading(false);
+        return;
+      }
+
       const whatsappMessage = formatOrderForWhatsApp();
       const whatsappUrl = `https://wa.me/5585994015283?text=${whatsappMessage}`;
 
