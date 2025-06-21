@@ -140,7 +140,6 @@ const Index = () => {
         </div>
       </header>
 
-
       {/* Category Navigation */}
       <CategoryNav
         categories={categories}
@@ -151,7 +150,6 @@ const Index = () => {
       {/* Menu Section */}
       <section className="py-16 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-
           {filteredProducts.length === 0 ? (
             <div className="text-center py-12">
               <p className="text-gray-500 text-lg">

@@ -5,7 +5,14 @@ import { ProductForm } from "@/components/Admin/ProductForm";
 import { ProductList } from "@/components/Admin/ProductList";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { LogOut, ArrowLeft, PlusCircle, List, BarChart2 } from "lucide-react";
+import {
+  LogOut,
+  ArrowLeft,
+  PlusCircle,
+  List,
+  BarChart2,
+  Calendar,
+} from "lucide-react";
 import { useNavigate } from "react-router-dom";
 // Sidebar imports
 import {
@@ -65,9 +72,9 @@ export default function Admin() {
   const [loading, setLoading] = useState(true);
   const [products, setProducts] = useState<Product[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
+  const [section, setSection] = useState<AdminSection>("pedidos");
   const { toast } = useToast();
   const navigate = useNavigate();
-  const [section, setSection] = useState<AdminSection>("pedidos");
 
   useEffect(() => {
     checkAuth();
@@ -120,10 +127,20 @@ export default function Admin() {
 
   const fetchOrders = async () => {
     try {
+      const currentDate = new Date();
+      const startDate = new Date(currentDate);
+      startDate.setHours(0, 0, 0, 0);
+
+      const endDate = new Date(currentDate);
+      endDate.setHours(23, 59, 59, 999);
+
       const { data, error } = await supabaseRaw
         .from("orders")
         .select("*")
+        .gte("created_at", startDate.toISOString())
+        .lte("created_at", endDate.toISOString())
         .order("created_at", { ascending: false });
+
       if (error) {
         toast({
           title: "Erro ao carregar pedidos",
@@ -161,6 +178,20 @@ export default function Admin() {
 
   const handleBackToSite = () => {
     navigate("/");
+  };
+
+  const formatDisplayDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString("pt-BR", {
+      weekday: "long",
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
+  };
+
+  const getCurrentDate = () => {
+    return formatDateToYYYYMMDD(new Date());
   };
 
   if (loading) {
@@ -258,65 +289,157 @@ export default function Admin() {
             )}
             {section === "pedidos" && (
               <div>
-                <h2 className="text-2xl font-bold mb-6">Pedidos do Dia</h2>
+                <div className="flex flex-col sm:flex-row justify-center items-start sm:items-center gap-4 mb-6">
+                  <h2 className="text-2xl font-bold">Pedidos do Dia</h2>
+
+                  {/* <div className="flex items-center gap-2">
+                    <Calendar className="h-4 w-4 text-gray-600" />
+                    <span className="text-sm text-gray-600 font-medium">
+                      {formatDisplayDate(getCurrentDate())}
+                    </span>
+                  </div> */}
+                </div>
+
                 {orders.length === 0 ? (
-                  <div className="text-gray-500">
-                    Nenhum pedido realizado hoje.
+                  <div className="text-gray-500 text-center py-8">
+                    <p className="text-lg">Nenhum pedido realizado hoje.</p>
+                    <p className="text-sm mt-2">
+                      Os pedidos aparecerão aqui quando houver agendamentos para
+                      hoje.
+                    </p>
                   </div>
                 ) : (
                   <div className="space-y-6">
-                    {orders.map((order) => (
+                    <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
+                      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+                        <div>
+                          <h3 className="font-semibold text-orange-800">
+                            📅 Resumo do Dia
+                          </h3>
+                          <p className="text-sm text-orange-600">
+                            {orders.length} agendamento
+                            {orders.length !== 1 ? "s" : ""} para hoje
+                          </p>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-sm text-orange-600">
+                            Valor Total:
+                          </p>
+                          <p className="font-bold text-orange-800">
+                            R${" "}
+                            {orders
+                              .reduce(
+                                (total, order) =>
+                                  total + Number(order.total_value),
+                                0
+                              )
+                              .toFixed(2)}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Lista de agendamentos */}
+                    {orders.map((order, index) => (
                       <div
                         key={order.id}
-                        className="bg-white rounded shadow p-4 border flex flex-col gap-2"
+                        className="bg-white rounded-lg shadow-md border border-gray-200 p-6 hover:shadow-lg transition-shadow"
                       >
-                        <div>
-                          <span className="font-semibold">Nome:</span>{" "}
-                          {order.customer_name}
+                        {/* Cabeçalho do agendamento */}
+                        <div className="flex items-center gap-3 mb-4">
+                          <div className="bg-orange-100 text-orange-800 rounded-full w-8 h-8 flex items-center justify-center font-bold text-sm">
+                            #{index + 1}
+                          </div>
+                          <div>
+                            <h4 className="font-bold text-lg text-gray-900">
+                              {order.customer_name}
+                            </h4>
+                            <p className="text-sm text-gray-600">
+                              📱 {order.customer_phone}
+                            </p>
+                          </div>
                         </div>
-                        <div>
-                          <span className="font-semibold">Número:</span>{" "}
-                          {order.customer_phone}
+
+                        {/* Endereço de entrega */}
+                        <div className="bg-gray-50 rounded-lg p-3 mb-4">
+                          <p className="text-sm font-semibold text-gray-700 mb-1">
+                            📍 Endereço de Entrega:
+                          </p>
+                          <p className="text-gray-600">
+                            {order.address_street}, {order.address_number} -{" "}
+                            {order.address_neighborhood}
+                          </p>
                         </div>
-                        <div>
-                          <span className="font-semibold">Endereço:</span>{" "}
-                          {order.address_street}, {order.address_number} -{" "}
-                          {order.address_neighborhood}
-                        </div>
-                        <div>
-                          <span className="font-semibold">Valor Total:</span>{" "}
-                          <span className="text-orange-600 font-bold">
-                            R$ {Number(order.total_value).toFixed(2)}
-                          </span>
-                        </div>
-                        <div>
-                          <span className="font-semibold">Pagamento:</span>{" "}
-                          {order.payment_method}
-                        </div>
-                        <div>
-                          <span className="font-semibold">Pedido:</span>
-                          <ul className="list-disc ml-6 mt-1">
-                            {Array.isArray(order.order_items)
-                              ? (order.order_items as OrderItem[]).map(
-                                  (item, idx) => (
-                                    <li key={idx}>
-                                      {item.quantity}x {item.name} - R${" "}
+
+                        {/* Itens do pedido */}
+                        <div className="mb-4">
+                          <p className="text-sm font-semibold text-gray-700 mb-2">
+                            🍔 Itens do Pedido:
+                          </p>
+                          <div className="space-y-1">
+                            {Array.isArray(order.order_items) ? (
+                              (order.order_items as OrderItem[]).map(
+                                (item, idx) => (
+                                  <div
+                                    key={idx}
+                                    className="flex justify-between items-center text-sm"
+                                  >
+                                    <span className="text-gray-700">
+                                      {item.quantity}x {item.name}
+                                    </span>
+                                    <span className="font-semibold text-gray-900">
+                                      R${" "}
                                       {(item.price * item.quantity).toFixed(2)}
-                                    </li>
-                                  )
+                                    </span>
+                                  </div>
                                 )
-                              : null}
-                          </ul>
+                              )
+                            ) : (
+                              <p className="text-gray-500 text-sm">
+                                Nenhum item encontrado
+                              </p>
+                            )}
+                          </div>
                         </div>
-                        <div className="text-xs text-gray-400 mt-2">
-                          {new Date(order.created_at).toLocaleTimeString(
-                            "pt-BR",
-                            {
-                              hour: "2-digit",
-                              minute: "2-digit",
-                              timeZone: "America/Fortaleza",
-                            }
-                          )}
+
+                        {/* Rodapé com valor total, método de pagamento e horário */}
+                        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 pt-3 border-t border-gray-200">
+                          <div className="flex flex-col gap-1">
+                            <div className="text-xs text-gray-500">
+                              <span className="font-semibold">
+                                Pedido feito:
+                              </span>{" "}
+                              {(() => {
+                                const orderDate = new Date(order.created_at);
+                                // Adiciona 3 horas ao horário do pedido
+                                orderDate.setHours(orderDate.getHours() + 3);
+                                return orderDate.toLocaleString("pt-BR", {
+                                  day: "2-digit",
+                                  month: "2-digit",
+                                  year: "numeric",
+                                  hour: "2-digit",
+                                  minute: "2-digit",
+                                  timeZone: "America/Fortaleza",
+                                });
+                              })()}
+                            </div>
+                            <div className="text-sm text-gray-600">
+                              💳 {order.payment_method}
+                            </div>
+                          </div>
+                          <div className="flex flex-col items-end gap-2">
+                            <div className="text-right">
+                              <p className="text-sm text-gray-600">
+                                Valor Total:
+                              </p>
+                              <p className="text-2xl font-bold text-orange-600">
+                                R$ {Number(order.total_value).toFixed(2)}
+                              </p>
+                            </div>
+                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                              ✅ Confirmado
+                            </span>
+                          </div>
                         </div>
                       </div>
                     ))}

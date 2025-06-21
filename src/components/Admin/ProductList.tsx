@@ -1,10 +1,9 @@
-
-import React from 'react';
-import { supabase } from '@/integrations/supabase/client';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { useToast } from '@/hooks/use-toast';
-import { Trash2, Edit } from 'lucide-react';
+import React from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { useToast } from "@/hooks/use-toast";
+import { Trash2, Edit } from "lucide-react";
 
 interface Product {
   id: string;
@@ -28,10 +27,7 @@ export function ProductList({ products, onProductDeleted }: ProductListProps) {
     }
 
     try {
-      const { error } = await supabase
-        .from('products')
-        .delete()
-        .eq('id', id);
+      const { error } = await supabase.from("products").delete().eq("id", id);
 
       if (error) {
         toast({
@@ -73,7 +69,9 @@ export function ProductList({ products, onProductDeleted }: ProductListProps) {
                   />
                   <div className="flex-1">
                     <h3 className="font-semibold">{product.name}</h3>
-                    <p className="text-sm text-gray-600">{product.description}</p>
+                    <p className="text-sm text-gray-600">
+                      {product.description}
+                    </p>
                     <p className="text-lg font-bold text-orange-600">
                       R$ {product.price.toFixed(2)}
                     </p>

@@ -1,50 +1,55 @@
-
-import React, { useState } from 'react';
-import { supabase } from '@/integrations/supabase/client';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useToast } from '@/hooks/use-toast';
+import React, { useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { useToast } from "@/hooks/use-toast";
 
 interface ProductFormProps {
   onProductAdded: () => void;
 }
 
 const categories = [
-  'Hambúrguers',
-  'Pizzas',
-  'Bebidas',
-  'Pastéis',
-  'Sobremesas'
+  "Hambúrguers",
+  "Pizzas",
+  "Bebidas",
+  "Pastéis",
+  "Sobremesas",
 ];
 
 export function ProductForm({ onProductAdded }: ProductFormProps) {
-  const [name, setName] = useState('');
-  const [description, setDescription] = useState('');
-  const [price, setPrice] = useState('');
-  const [category, setCategory] = useState('');
+  const [name, setName] = useState("");
+  const [description, setDescription] = useState("");
+  const [price, setPrice] = useState("");
+  const [category, setCategory] = useState("");
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
 
   const uploadImage = async (file: File): Promise<string | null> => {
-    const fileExt = file.name.split('.').pop();
+    const fileExt = file.name.split(".").pop();
     const fileName = `${Math.random()}.${fileExt}`;
     const filePath = `${fileName}`;
 
     const { error: uploadError } = await supabase.storage
-      .from('product-images')
+      .from("product-images")
       .upload(filePath, file);
 
     if (uploadError) {
-      console.error('Error uploading image:', uploadError);
+      console.error("Error uploading image:", uploadError);
       return null;
     }
 
     const { data } = supabase.storage
-      .from('product-images')
+      .from("product-images")
       .getPublicUrl(filePath);
 
     return data.publicUrl;
@@ -55,8 +60,8 @@ export function ProductForm({ onProductAdded }: ProductFormProps) {
     setLoading(true);
 
     try {
-      let imageUrl = '';
-      
+      let imageUrl = "";
+
       if (imageFile) {
         const uploadedUrl = await uploadImage(imageFile);
         if (!uploadedUrl) {
@@ -71,17 +76,15 @@ export function ProductForm({ onProductAdded }: ProductFormProps) {
         imageUrl = uploadedUrl;
       }
 
-      const { error } = await supabase
-        .from('products')
-        .insert([
-          {
-            name,
-            description,
-            price: parseFloat(price),
-            category,
-            image: imageUrl,
-          },
-        ]);
+      const { error } = await supabase.from("products").insert([
+        {
+          name,
+          description,
+          price: parseFloat(price),
+          category,
+          image: imageUrl,
+        },
+      ]);
 
       if (error) {
         toast({
@@ -94,14 +97,13 @@ export function ProductForm({ onProductAdded }: ProductFormProps) {
           title: "Produto adicionado com sucesso!",
           description: `${name} foi adicionado ao cardápio.`,
         });
-        setName('');
-        setDescription('');
-        setPrice('');
-        setCategory('');
+        setName("");
+        setDescription("");
+        setPrice("");
+        setCategory("");
         setImageFile(null);
-        // Reset the file input
-        const fileInput = document.getElementById('image') as HTMLInputElement;
-        if (fileInput) fileInput.value = '';
+        const fileInput = document.getElementById("image") as HTMLInputElement;
+        if (fileInput) fileInput.value = "";
         onProductAdded();
       }
     } catch (error) {
@@ -118,8 +120,7 @@ export function ProductForm({ onProductAdded }: ProductFormProps) {
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      // Verificar se é uma imagem
-      if (!file.type.startsWith('image/')) {
+      if (!file.type.startsWith("image/")) {
         toast({
           title: "Arquivo inválido",
           description: "Por favor, selecione apenas arquivos de imagem.",
