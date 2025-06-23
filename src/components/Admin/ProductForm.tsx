@@ -83,6 +83,7 @@ export function ProductForm({ onProductAdded }: ProductFormProps) {
           price: parseFloat(price),
           category,
           image: imageUrl,
+          available: true,
         },
       ]);
 

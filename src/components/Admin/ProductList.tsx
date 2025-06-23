@@ -11,14 +11,20 @@ interface Product {
   description: string;
   price: number;
   image: string;
+  available: boolean;
 }
 
 interface ProductListProps {
   products: Product[];
   onProductDeleted: () => void;
+  showAvailabilityToggle?: boolean;
 }
 
-export function ProductList({ products, onProductDeleted }: ProductListProps) {
+export function ProductList({
+  products,
+  onProductDeleted,
+  showAvailabilityToggle = true,
+}: ProductListProps) {
   const { toast } = useToast();
 
   const handleDelete = async (id: string, name: string) => {
@@ -76,7 +82,9 @@ export function ProductList({ products, onProductDeleted }: ProductListProps) {
                       R$ {product.price.toFixed(2)}
                     </p>
                   </div>
-                  <div className="flex gap-2">
+                </div>
+                {showAvailabilityToggle && (
+                  <div className="flex gap-2 justify-center mt-2">
                     <Button
                       size="icon"
                       variant="outline"
@@ -85,8 +93,40 @@ export function ProductList({ products, onProductDeleted }: ProductListProps) {
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>
+                    <Button
+                      size="sm"
+                      variant={product.available ? "secondary" : "default"}
+                      className={
+                        product.available ? "text-green-600" : "text-gray-400"
+                      }
+                      onClick={async () => {
+                        const { error } = await supabase
+                          .from("products")
+                          .update({ available: !product.available })
+                          .eq("id", product.id);
+                        if (error) {
+                          toast({
+                            title: "Erro ao atualizar disponibilidade",
+                            description: error.message,
+                            variant: "destructive",
+                          });
+                        } else {
+                          toast({
+                            title: product.available
+                              ? "Produto desativado"
+                              : "Produto ativado",
+                            description: `${product.name} agora está ${
+                              product.available ? "indisponível" : "disponível"
+                            }.`,
+                          });
+                          onProductDeleted();
+                        }
+                      }}
+                    >
+                      {product.available ? "Disponível" : "Indisponível"}
+                    </Button>
                   </div>
-                </div>
+                )}
               </CardContent>
             </Card>
           ))}

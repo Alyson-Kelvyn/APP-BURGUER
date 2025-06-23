@@ -12,6 +12,7 @@ import {
   List,
   BarChart2,
   Calendar,
+  Edit,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 // Sidebar imports
@@ -23,8 +24,8 @@ import {
   SidebarMenuItem,
   SidebarMenuButton,
   SidebarInset,
-  SidebarTrigger,
   SidebarFooter,
+  useSidebar,
 } from "@/components/ui/sidebar";
 import { Tables } from "@/integrations/supabase/types";
 import { createClient } from "@supabase/supabase-js";
@@ -35,9 +36,10 @@ interface Product {
   description: string;
   price: number;
   image: string;
+  available: boolean;
 }
 
-type AdminSection = "adicionar" | "pedidos" | "estatisticas";
+type AdminSection = "adicionar" | "pedidos" | "estatisticas" | "ajustes";
 
 type OrderItem = {
   name: string;
@@ -67,14 +69,53 @@ const supabaseRaw = createClient(
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRrd3R0ZGpwa3lucXByc3psbW1yIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTAyNjU1NjEsImV4cCI6MjA2NTg0MTU2MX0._nj90k5DdOSrscu1iwdr1Fmp34gjCRuLa0hSK-ktGSk"
 );
 
+function SidebarMenuButtonIcon() {
+  const { toggleSidebar } = useSidebar();
+  return (
+    <button
+      onClick={toggleSidebar}
+      className="p-2 rounded hover:bg-orange-100 focus:outline-none"
+    >
+      <List className="w-7 h-7 text-orange-600" />
+    </button>
+  );
+}
+
+function SidebarMenuButtonWithClose({
+  sectionValue,
+  section,
+  setSection,
+  children,
+  tooltip,
+}) {
+  const { isMobile, setOpenMobile } = useSidebar();
+  return (
+    <SidebarMenuButton
+      isActive={section === sectionValue}
+      onClick={() => {
+        setSection(sectionValue);
+        if (isMobile) setOpenMobile(false);
+      }}
+      tooltip={tooltip}
+    >
+      {children}
+    </SidebarMenuButton>
+  );
+}
+
 export default function Admin() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loading, setLoading] = useState(true);
   const [products, setProducts] = useState<Product[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
+  const [ordersWeek, setOrdersWeek] = useState<Order[]>([]);
+  const [ordersMonth, setOrdersMonth] = useState<Order[]>([]);
   const [section, setSection] = useState<AdminSection>("pedidos");
   const { toast } = useToast();
   const navigate = useNavigate();
+  const [statsFilter, setStatsFilter] = useState<"dia" | "semana" | "mes">(
+    "dia"
+  );
 
   useEffect(() => {
     checkAuth();
@@ -84,6 +125,8 @@ export default function Admin() {
     if (isAuthenticated) {
       fetchProducts();
       fetchOrders();
+      fetchOrdersWeek();
+      fetchOrdersMonth();
     }
   }, [isAuthenticated]);
 
@@ -159,6 +202,56 @@ export default function Admin() {
     }
   };
 
+  const fetchOrdersWeek = async () => {
+    try {
+      const now = new Date();
+      const firstDayOfWeek = new Date(now);
+      firstDayOfWeek.setDate(now.getDate() - now.getDay()); // Domingo
+      firstDayOfWeek.setHours(0, 0, 0, 0);
+      const lastDayOfWeek = new Date(now);
+      lastDayOfWeek.setDate(now.getDate() + (6 - now.getDay())); // Sábado
+      lastDayOfWeek.setHours(23, 59, 59, 999);
+      const { data, error } = await supabaseRaw
+        .from("orders")
+        .select("*")
+        .gte("created_at", firstDayOfWeek.toISOString())
+        .lte("created_at", lastDayOfWeek.toISOString())
+        .order("created_at", { ascending: false });
+      if (!error) setOrdersWeek(data || []);
+    } catch {}
+  };
+
+  const fetchOrdersMonth = async () => {
+    try {
+      const now = new Date();
+      const firstDayOfMonth = new Date(
+        now.getFullYear(),
+        now.getMonth(),
+        1,
+        0,
+        0,
+        0,
+        0
+      );
+      const lastDayOfMonth = new Date(
+        now.getFullYear(),
+        now.getMonth() + 1,
+        0,
+        23,
+        59,
+        59,
+        999
+      );
+      const { data, error } = await supabaseRaw
+        .from("orders")
+        .select("*")
+        .gte("created_at", firstDayOfMonth.toISOString())
+        .lte("created_at", lastDayOfMonth.toISOString())
+        .order("created_at", { ascending: false });
+      if (!error) setOrdersMonth(data || []);
+    } catch {}
+  };
+
   const handleLogout = async () => {
     try {
       await supabaseClient.auth.signOut();
@@ -207,37 +300,50 @@ export default function Admin() {
   }
 
   return (
-    <SidebarProvider>
+    <SidebarProvider defaultOpen={false}>
       <div className="min-h-screen bg-gray-50 flex">
         <Sidebar className="bg-white border-r">
           <SidebarContent>
             <SidebarMenu>
               <SidebarMenuItem>
-                <SidebarMenuButton
-                  isActive={section === "adicionar"}
-                  onClick={() => setSection("adicionar")}
-                  tooltip="Adicionar Produto"
-                >
-                  <PlusCircle className="mr-2" /> Adicionar Produto
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton
-                  isActive={section === "pedidos"}
-                  onClick={() => setSection("pedidos")}
+                <SidebarMenuButtonWithClose
+                  sectionValue="pedidos"
+                  section={section}
+                  setSection={setSection}
                   tooltip="Pedidos"
                 >
                   <List className="mr-2" /> Pedidos
-                </SidebarMenuButton>
+                </SidebarMenuButtonWithClose>
               </SidebarMenuItem>
               <SidebarMenuItem>
-                <SidebarMenuButton
-                  isActive={section === "estatisticas"}
-                  onClick={() => setSection("estatisticas")}
+                <SidebarMenuButtonWithClose
+                  sectionValue="adicionar"
+                  section={section}
+                  setSection={setSection}
+                  tooltip="Adicionar Produto"
+                >
+                  <PlusCircle className="mr-2" /> Adicionar Produto
+                </SidebarMenuButtonWithClose>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButtonWithClose
+                  sectionValue="ajustes"
+                  section={section}
+                  setSection={setSection}
+                  tooltip="Ajuste de Produtos"
+                >
+                  <Edit className="mr-2" /> Ajuste de Produtos
+                </SidebarMenuButtonWithClose>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButtonWithClose
+                  sectionValue="estatisticas"
+                  section={section}
+                  setSection={setSection}
                   tooltip="Estatísticas"
                 >
                   <BarChart2 className="mr-2" /> Estatísticas
-                </SidebarMenuButton>
+                </SidebarMenuButtonWithClose>
               </SidebarMenuItem>
             </SidebarMenu>
           </SidebarContent>
@@ -261,19 +367,17 @@ export default function Admin() {
           </SidebarFooter>
         </Sidebar>
         <SidebarInset>
-          <header className="bg-white shadow-sm border-b">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-              <div className="flex justify-between items-center py-4">
-                <div className="flex items-center gap-4">
-                  <SidebarTrigger className="md:hidden" />
-                  <h1 className="text-2xl font-bold text-orange-600">
-                    Administração - Burger House
-                  </h1>
-                </div>
+          <header className="bg-white shadow-sm border-b w-full px-4 sm:px-6 lg:px-8">
+            <div className="flex justify-between items-center py-4 w-full">
+              <div className="flex items-center gap-4">
+                <SidebarMenuButtonIcon />
+                <h1 className="text-2xl font-bold text-orange-600">
+                  Nildo Burguer
+                </h1>
               </div>
             </div>
           </header>
-          <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <main className="w-full px-4 sm:px-6 lg:px-8 py-8">
             {section === "adicionar" && (
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 <div>
@@ -283,6 +387,7 @@ export default function Admin() {
                   <ProductList
                     products={products}
                     onProductDeleted={fetchProducts}
+                    showAvailabilityToggle={false}
                   />
                 </div>
               </div>
@@ -447,9 +552,223 @@ export default function Admin() {
                 )}
               </div>
             )}
+            {section === "ajustes" && (
+              <div>
+                <h2 className="text-2xl font-bold mb-4 text-orange-700">
+                  Ajuste de Produtos
+                </h2>
+                <ProductList
+                  products={products}
+                  onProductDeleted={fetchProducts}
+                />
+              </div>
+            )}
             {section === "estatisticas" && (
-              <div className="text-xl text-gray-700">
-                Área de estatísticas (em breve)
+              <div className="space-y-8">
+                <div className="flex gap-2 mb-4">
+                  <button
+                    className={`px-4 py-2 rounded font-semibold border transition-colors ${
+                      statsFilter === "dia"
+                        ? "bg-orange-600 text-white border-orange-600"
+                        : "bg-white text-orange-600 border-orange-300 hover:bg-orange-50"
+                    }`}
+                    onClick={() => {
+                      setStatsFilter("dia");
+                    }}
+                  >
+                    Dia
+                  </button>
+                  <button
+                    className={`px-4 py-2 rounded font-semibold border transition-colors ${
+                      statsFilter === "semana"
+                        ? "bg-blue-600 text-white border-blue-600"
+                        : "bg-white text-blue-600 border-blue-300 hover:bg-blue-50"
+                    }`}
+                    onClick={() => {
+                      setStatsFilter("semana");
+                    }}
+                  >
+                    Semana
+                  </button>
+                  <button
+                    className={`px-4 py-2 rounded font-semibold border transition-colors ${
+                      statsFilter === "mes"
+                        ? "bg-green-600 text-white border-green-600"
+                        : "bg-white text-green-600 border-green-300 hover:bg-green-50"
+                    }`}
+                    onClick={() => {
+                      setStatsFilter("mes");
+                    }}
+                  >
+                    Mês
+                  </button>
+                </div>
+                {statsFilter === "dia" && (
+                  <div>
+                    <h2 className="text-2xl font-bold mb-4 text-orange-700">
+                      Estatísticas dos Pedidos do Dia
+                    </h2>
+                    {orders.length === 0 ? (
+                      <div className="text-gray-500 text-center py-8">
+                        <p className="text-lg">Nenhum pedido realizado hoje.</p>
+                      </div>
+                    ) : (
+                      <div className="space-y-4">
+                        {orders.map((order) => (
+                          <div
+                            key={order.id}
+                            className="bg-white rounded-lg shadow border p-4"
+                          >
+                            <div className="font-bold text-lg mb-1">
+                              {order.customer_name}
+                            </div>
+                            <div className="text-sm text-gray-500 mb-2">
+                              {order.customer_phone}
+                            </div>
+                            <div className="mb-2">
+                              <span className="font-semibold">Produtos:</span>
+                              <ul className="ml-2 list-disc text-sm">
+                                {(order.order_items as OrderItem[]).map(
+                                  (item, idx) => (
+                                    <li
+                                      key={idx}
+                                      className="flex justify-between"
+                                    >
+                                      <span>
+                                        {item.quantity}x {item.name}
+                                      </span>
+                                      <span className="font-semibold ml-2">
+                                        R${" "}
+                                        {(item.price * item.quantity).toFixed(
+                                          2
+                                        )}
+                                      </span>
+                                    </li>
+                                  )
+                                )}
+                              </ul>
+                            </div>
+                            <div className="font-bold text-orange-700 mt-2">
+                              Total: R$ {Number(order.total_value).toFixed(2)}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+                {statsFilter === "semana" && (
+                  <div>
+                    <h2 className="text-2xl font-bold mb-4 text-blue-700">
+                      Estatísticas dos Pedidos da Semana
+                    </h2>
+                    {ordersWeek.length === 0 ? (
+                      <div className="text-gray-500 text-center py-8">
+                        <p className="text-lg">
+                          Nenhum pedido realizado nesta semana.
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="space-y-4">
+                        {ordersWeek.map((order) => (
+                          <div
+                            key={order.id}
+                            className="bg-white rounded-lg shadow border p-4"
+                          >
+                            <div className="font-bold text-lg mb-1">
+                              {order.customer_name}
+                            </div>
+                            <div className="text-sm text-gray-500 mb-2">
+                              {order.customer_phone}
+                            </div>
+                            <div className="mb-2">
+                              <span className="font-semibold">Produtos:</span>
+                              <ul className="ml-2 list-disc text-sm">
+                                {(order.order_items as OrderItem[]).map(
+                                  (item, idx) => (
+                                    <li
+                                      key={idx}
+                                      className="flex justify-between"
+                                    >
+                                      <span>
+                                        {item.quantity}x {item.name}
+                                      </span>
+                                      <span className="font-semibold ml-2">
+                                        R${" "}
+                                        {(item.price * item.quantity).toFixed(
+                                          2
+                                        )}
+                                      </span>
+                                    </li>
+                                  )
+                                )}
+                              </ul>
+                            </div>
+                            <div className="font-bold text-blue-700 mt-2">
+                              Total: R$ {Number(order.total_value).toFixed(2)}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+                {statsFilter === "mes" && (
+                  <div>
+                    <h2 className="text-2xl font-bold mb-4 text-green-700">
+                      Estatísticas dos Pedidos do Mês
+                    </h2>
+                    {ordersMonth.length === 0 ? (
+                      <div className="text-gray-500 text-center py-8">
+                        <p className="text-lg">
+                          Nenhum pedido realizado neste mês.
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="space-y-4">
+                        {ordersMonth.map((order) => (
+                          <div
+                            key={order.id}
+                            className="bg-white rounded-lg shadow border p-4"
+                          >
+                            <div className="font-bold text-lg mb-1">
+                              {order.customer_name}
+                            </div>
+                            <div className="text-sm text-gray-500 mb-2">
+                              {order.customer_phone}
+                            </div>
+                            <div className="mb-2">
+                              <span className="font-semibold">Produtos:</span>
+                              <ul className="ml-2 list-disc text-sm">
+                                {(order.order_items as OrderItem[]).map(
+                                  (item, idx) => (
+                                    <li
+                                      key={idx}
+                                      className="flex justify-between"
+                                    >
+                                      <span>
+                                        {item.quantity}x {item.name}
+                                      </span>
+                                      <span className="font-semibold ml-2">
+                                        R${" "}
+                                        {(item.price * item.quantity).toFixed(
+                                          2
+                                        )}
+                                      </span>
+                                    </li>
+                                  )
+                                )}
+                              </ul>
+                            </div>
+                            <div className="font-bold text-green-700 mt-2">
+                              Total: R$ {Number(order.total_value).toFixed(2)}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             )}
           </main>
