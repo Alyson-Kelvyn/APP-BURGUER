@@ -24,6 +24,7 @@ export const CartDrawer = ({ children }: CartDrawerProps) => {
     getTotalItems,
     getTotalPrice,
     clearCart,
+    updateObservacao,
   } = useCart();
   const [showCheckout, setShowCheckout] = useState(false);
 
@@ -38,7 +39,56 @@ export const CartDrawer = ({ children }: CartDrawerProps) => {
   return (
     <Sheet>
       <SheetTrigger asChild>{children}</SheetTrigger>
-      <SheetContent className="w-full max-w-[18rem] sm:w-[300px] sm:max-w-full p-1 sm:p-3 overflow-x-hidden">
+      <SheetContent className="w-full max-w-[18rem] sm:w-[300px] sm:max-w-full p-1 sm:p-3 overflow-x-hidden sheet-content-mobile-full">
+        <style>{`
+          @media (max-width: 640px) {
+            .sheet-content-mobile-full {
+              width: 100vw !important;
+              max-width: 100vw !important;
+              min-width: 100vw !important;
+              left: 0 !important;
+              right: 0 !important;
+              top: 0 !important;
+              height: 100vh !important;
+              max-height: 100vh !important;
+              border-radius: 0 !important;
+              padding: 0 !important;
+            }
+            .cart-mobile-content {
+              padding: 2.5rem 1.2rem 2.5rem 1.2rem !important;
+            }
+            .cart-mobile-title {
+              font-size: 2.8rem !important;
+              padding-top: 2.5rem !important;
+              padding-bottom: 2.5rem !important;
+            }
+            .cart-mobile-product {
+              padding: 2.5rem 1.2rem !important;
+            }
+            .cart-mobile-input {
+              font-size: 2.5rem !important;
+              padding: 5rem !important;
+              min-height: 3.5rem !important;
+            }
+            .cart-mobile-total {
+              font-size: 2.5rem !important;
+              padding: 2.5rem 0 !important;
+            }
+            .cart-mobile-btn {
+              font-size: 2.5rem !important;
+              padding: 2.5rem !important;
+              min-height: 4rem !important;
+            }
+            .cart-mobile-img {
+              max-width: 180px !important;
+              height: 120px !important;
+            }
+            .cart-mobile-product h4,
+            .cart-mobile-product p {
+              font-size: 2.2rem !important;
+            }
+          }
+        `}</style>
         <SheetHeader>
           <SheetTitle className="flex items-center gap-2">
             <ShoppingCart className="h-5 w-5" />
@@ -70,7 +120,7 @@ export const CartDrawer = ({ children }: CartDrawerProps) => {
                             <img
                               src={item.image}
                               alt={item.name}
-                              className="w-full max-w-[50px] sm:w-10 h-14 sm:h-10 object-cover rounded"
+                              className="w-full max-w-[70px] sm:w-10 h-20 sm:h-10 object-cover rounded cart-mobile-img"
                             />
                             <div className="flex-1 w-full min-w-0 max-w-full">
                               <h4 className="font-bold text-xs sm:text-base break-words whitespace-normal leading-tight mb-0.5 truncate">
@@ -79,6 +129,15 @@ export const CartDrawer = ({ children }: CartDrawerProps) => {
                               <p className="text-[10px] sm:text-xs text-gray-600 mb-1 sm:mb-1.5 line-clamp-2 break-words whitespace-normal truncate">
                                 {item.description}
                               </p>
+                              <input
+                                type="text"
+                                className="w-full text-[10px] sm:text-xs border rounded px-1 py-0.5 mb-1 mt-1"
+                                placeholder="Observação (ex: sem cebola, ponto da carne...)"
+                                value={item.observacao || ""}
+                                onChange={(e) =>
+                                  updateObservacao(item.id, e.target.value)
+                                }
+                              />
                               <div className="flex flex-row items-center justify-between gap-1 sm:gap-1.5 mt-0.5">
                                 <span className="font-bold text-orange-600 text-xs sm:text-base">
                                   R$ {item.price.toFixed(2)}

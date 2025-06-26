@@ -10,13 +10,15 @@ interface Product {
 
 interface CartItem extends Product {
   quantity: number;
+  observacao?: string;
 }
 
 interface CartContextType {
   items: CartItem[];
-  addToCart: (product: Product) => void;
+  addToCart: (product: Product, observacao?: string) => void;
   removeFromCart: (productId: string) => void;
   updateQuantity: (productId: string, quantity: number) => void;
+  updateObservacao: (productId: string, observacao: string) => void;
   clearCart: () => void;
   getTotalItems: () => number;
   getTotalPrice: () => number;
@@ -39,19 +41,23 @@ interface CartProviderProps {
 export const CartProvider = ({ children }: CartProviderProps) => {
   const [items, setItems] = useState<CartItem[]>([]);
 
-  const addToCart = (product: Product) => {
+  const addToCart = (product: Product, observacao?: string) => {
     setItems((prevItems) => {
       const existingItem = prevItems.find((item) => item.id === product.id);
 
       if (existingItem) {
         return prevItems.map((item) =>
           item.id === product.id
-            ? { ...item, quantity: item.quantity + 1 }
+            ? {
+                ...item,
+                quantity: item.quantity + 1,
+                observacao: observacao ?? item.observacao,
+              }
             : item
         );
       }
 
-      return [...prevItems, { ...product, quantity: 1 }];
+      return [...prevItems, { ...product, quantity: 1, observacao }];
     });
   };
 
@@ -68,6 +74,14 @@ export const CartProvider = ({ children }: CartProviderProps) => {
     setItems((prevItems) =>
       prevItems.map((item) =>
         item.id === productId ? { ...item, quantity } : item
+      )
+    );
+  };
+
+  const updateObservacao = (productId: string, observacao: string) => {
+    setItems((prevItems) =>
+      prevItems.map((item) =>
+        item.id === productId ? { ...item, observacao } : item
       )
     );
   };
@@ -91,6 +105,7 @@ export const CartProvider = ({ children }: CartProviderProps) => {
         addToCart,
         removeFromCart,
         updateQuantity,
+        updateObservacao,
         clearCart,
         getTotalItems,
         getTotalPrice,

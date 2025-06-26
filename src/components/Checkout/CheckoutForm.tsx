@@ -44,7 +44,11 @@ export function CheckoutForm({ onBack }: CheckoutFormProps) {
     items.forEach((item) => {
       message += `• ${item.quantity}x ${item.name} - R$ ${(
         item.price * item.quantity
-      ).toFixed(2)}\n`;
+      ).toFixed(2)}`;
+      if (item.observacao) {
+        message += `\n    Observação: ${item.observacao}`;
+      }
+      message += `\n`;
     });
 
     message += `\n💰 *TOTAL: R$ ${getTotalPrice().toFixed(2)}*\n\n`;
@@ -74,6 +78,7 @@ export function CheckoutForm({ onBack }: CheckoutFormProps) {
             name: item.name,
             quantity: item.quantity,
             price: item.price,
+            observacao: item.observacao || null,
           })),
           total_value: getTotalPrice(),
           payment_method: paymentMethod,

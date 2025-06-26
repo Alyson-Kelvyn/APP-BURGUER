@@ -26,6 +26,9 @@ const Index = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const { addToCart, getTotalItems, items, updateQuantity } = useCart();
+  const [observacoes, setObservacoes] = useState<{
+    [productId: string]: string;
+  }>({});
 
   useEffect(() => {
     fetchProducts();
@@ -89,11 +92,8 @@ const Index = () => {
   };
 
   const handleAddToCart = (product: Product) => {
-    addToCart(product);
-    // toast({
-    //   title: "Produto adicionado!",
-    //   description: `${product.name} foi adicionado ao carrinho.`,
-    // });
+    addToCart(product, observacoes[product.id] || "");
+    setObservacoes((prev) => ({ ...prev, [product.id]: "" }));
   };
 
   if (loading) {
@@ -184,6 +184,18 @@ const Index = () => {
                     <p className="text-gray-600 mb-2 sm:mb-4 text-xs sm:text-sm">
                       {product.description}
                     </p>
+                    <input
+                      type="text"
+                      className="w-full text-[10px] sm:text-xs border rounded px-1 py-0.5 mb-2"
+                      placeholder="Observação (ex: sem cebola, ponto da carne...)"
+                      value={observacoes[product.id] || ""}
+                      onChange={(e) =>
+                        setObservacoes((prev) => ({
+                          ...prev,
+                          [product.id]: e.target.value,
+                        }))
+                      }
+                    />
                     <div className="flex items-center justify-between">
                       <span className="text-lg sm:text-2xl font-bold text-orange-600">
                         R$ {product.price.toFixed(2)}
